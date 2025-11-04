@@ -87,7 +87,7 @@ jobs:
         - uses: actions/upload-artifact@v4
           with:
             name: lint-report
-            path: pylint-report.tx
+            path: pylint-report.txt
 
   #  SECURITY SCAN STAGE
   security:
@@ -97,7 +97,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Bandit security scan
         run: |
-          bandit -r helping_hands -f json -o bandit-report.json || true
+          bandit -r helping_hands -f json -o bandit-report.json || echo "{}" > bandit-report.json
       - uses: actions/upload-artifact@v4
         with:
           name: security-report
