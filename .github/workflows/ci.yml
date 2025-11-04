@@ -1,0 +1,106 @@
+name: Helping Hands Django CI/CD Pipeline
+
+# Trigger rules
+on:
+  push:
+    branches:
+      - develop
+      - feature/user-authentication
+      - feature/shift-management
+      - feature/notifications
+      - feature/dashboard-reports
+  pull_request:
+    branches:
+      - develop
+      - feature/user-authentication
+      - feature/shift-management
+      - feature/notifications
+      - feature/dashboard-reports
+
+jobs:
+  #  BUILD STAGE
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 pylint bandit pytest pytest-cov
+
+  #  TEST STAGE
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Django checks and tests
+        run: |
+          python manage.py check
+          python manage.py test
+
+  #  COVERAGE STAGE
+  coverage:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run coverage
+        run: pytest --cov=helping_hands --cov-report=html
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+  #  LINT STAGE
+  lint:
+    needs: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint with pylint
+        run: |
+          pylint helping_hands > pylint-report.txt || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: pylint-report.txt
+
+  #  SECURITY SCAN STAGE
+  security:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Bandit security scan
+        run: |
+          bandit -r helping_hands -f json -o bandit-report.json || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: bandit-report.json
+
+  #  DEPLOYMENT ARTIFACT STAGE
+  deploy:
+    needs: [coverage, lint, security]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create deployment artifact
+        run: |
+          mkdir -p deployment
+          cp -r helping_hands deployment/
+          cp README.md requirements.txt deployment/
+          zip -r deployment-package-${{ github.run_number }}.zip deployment/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deployment-package
+          path: deployment-package-*.zip
