@@ -1,6 +1,7 @@
 from django.test import TestCase
+from helping_hands import settings  
 
 class DummyTest(TestCase):
-    def test_example(self):
-        """Simple test to check CI/CD pipeline"""
-        self.assertEqual(1 + 1, 2)
+    def test_import(self):
+        """Ensure helping_hands module imports correctly"""
+        self.assertTrue(hasattr(settings, 'INSTALLED_APPS'))
