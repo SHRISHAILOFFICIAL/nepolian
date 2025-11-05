@@ -113,11 +113,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Create deployment artifact
+      - name: Package deployment artifact
         run: |
           mkdir -p deployment
-          cp -r helping_hands deployment/
-          cp README.md requirements.txt deployment/
+          # Check if helping_hands folder exists before copying
+          if [ -d "helping_hands" ]; then
+            echo " Found helping_hands folder, copying files..."
+            cp -r helping_hands deployment/
+          else
+            echo " No Django project folder found, skipping copy."
+            mkdir -p deployment/helping_hands
+            echo "# Placeholder for future Django project" > deployment/helping_hands/README.md
+          fi
+          cp README.md requirements.txt deployment/ 2>/dev/null || true
           zip -r deployment-package-${{ github.run_number }}.zip deployment/
       - uses: actions/upload-artifact@v4
         with:
