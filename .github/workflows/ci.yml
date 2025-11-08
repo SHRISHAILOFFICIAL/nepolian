@@ -1,21 +1,12 @@
 name: Helping Hands Django CI/CD Pipeline
 
-# Trigger rules
 on:
   push:
     branches:
-      - develop
-      - feature/user-authentication
-      - feature/shift-management
-      - feature/notifications
-      - feature/dashboard-reports
+      - "*"
   pull_request:
     branches:
-      - develop
-      - feature/user-authentication
-      - feature/shift-management
-      - feature/notifications
-      - feature/dashboard-reports
+      - "*"
 
 jobs:
   #  BUILD STAGE
@@ -28,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -56,7 +47,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -67,31 +58,35 @@ jobs:
           pytest --maxfail=1 --disable-warnings -q || true
           mkdir -p htmlcov
           echo "<html><body><h2>No Django project yet - coverage skipped.</h2></body></html>" > htmlcov/index.html
-        
+
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: htmlcov/
 
-
   #  LINT STAGE
   lint:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v4
-        - uses: actions/setup-python@v5
-          with:
-            python-version: '3.10'
-        - name: Install dependencies
-          run: |
-            python -m pip install --upgrade pip
-            pip install pylint
-        - name: Lint code
-          run: pylint helping_hands > pylint-report.txt || true
-        - uses: actions/upload-artifact@v4
-          with:
-            name: lint-report
-            path: pylint-report.txt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint flake8
+      - name: Lint code
+        run: flake8 apps/ helping_hand_core/ > flake8-report.txt || true
+          pylint apps helping_hand_core > pylint-report.txt || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lint-report-flake8
+          path: flake8-report.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: pylint-report.txt
 
   #  SECURITY SCAN STAGE
   security:
@@ -117,13 +112,13 @@ jobs:
         run: |
           mkdir -p deployment
           # Check if helping_hands folder exists before copying
-          if [ -d "helping_hands" ]; then
-            echo " Found helping_hands folder, copying files..."
+          if [ -d "helping_hand_core" ]; then
+            echo " Found helping_hand_core folder, copying files..."
             cp -r helping_hands deployment/
           else
             echo " No Django project folder found, skipping copy."
-            mkdir -p deployment/helping_hands
-            echo "# Placeholder for future Django project" > deployment/helping_hands/README.md
+            mkdir -p deployment/helping_hand_core
+            echo "# Placeholder for future Django project" > deployment/helping_hands_core/README.md
           fi
           cp README.md requirements.txt deployment/ 2>/dev/null || true
           zip -r deployment-package-${{ github.run_number }}.zip deployment/

@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.pot
+
+# Virtual environment
+venv/
+ENV/
+env/
+.venv/
+virtualenv/
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+*.migrations/
+media/
+staticfiles/
+.django_db_sqlite3
+
+# Environment and settings
+.env
+.env.local
+.env.*.local
+.settings/
+
+# Node (if using frontend tooling)
+node_modules/
+npm-debug.log
+yarn-error.log
+.npm
+package-lock.json
+yarn.lock
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing and Coverage
+htmlcov/
+.coverage
+.coverage.*
+.pytest_cache/
+.hypothesis/
+
+# CI/CD reports
+flake8-report.txt
+pylint-report.txt
+bandit-report.json
+deployment/
+deployment-package-*.zip
+
+# Misc
+*.bak
+*.tmp
+.cache/
