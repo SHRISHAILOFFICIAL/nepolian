@@ -123,7 +123,7 @@ jobs:
           # Check if helping_hands folder exists before copying
           if [ -d "helping_hand_core" ]; then
             echo " Found helping_hand_core folder, copying files..."
-            cp -r helping_hands deployment/
+            cp -r helping_hand_core deployment/
           else
             echo " No Django project folder found, skipping copy."
             mkdir -p deployment/helping_hand_core
