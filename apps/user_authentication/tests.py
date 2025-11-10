@@ -1,6 +1,7 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from .models import CustomUser
+from django.db import IntegrityError
 
 class CustomUserModelTestCase(TestCase):
     def setUp(self):
@@ -20,13 +21,12 @@ class CustomUserModelTestCase(TestCase):
         self.assertEqual(str(self.user), 'testuser (Staff)')
 
     def test_user_email_unique(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             CustomUser.objects.create_user(
                 username='testuser2',
                 email='test@example.com',
                 password='pass123'
             )
-
 
 class AuthenticationViewTestCase(TestCase):
     def setUp(self):

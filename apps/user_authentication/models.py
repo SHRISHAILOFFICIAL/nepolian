@@ -7,7 +7,7 @@ class CustomUser(AbstractUser):
         ('shift_manager', 'Shift Manager'),
         ('staff', 'Staff'),
     ]
-    
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
     phone = models.CharField(max_length=15, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -19,4 +19,5 @@ class CustomUser(AbstractUser):
         ordering = ['-created_at']
 
     def __str__(self):
+        # Uses get_role_display for readable output (e.g., "Staff")
         return f"{self.username} ({self.get_role_display()})"

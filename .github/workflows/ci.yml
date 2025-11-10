@@ -9,7 +9,6 @@ on:
       - "**"
 
 jobs:
-  #  BUILD STAGE
   build:
     runs-on: ubuntu-latest
     steps:
@@ -27,12 +26,12 @@ jobs:
           pip install -r requirements.txt
           pip install flake8 pylint bandit pytest pytest-cov
 
-  #  TEST STAGE
   test:
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -42,12 +41,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Run Django checks and tests
         run: |
           python manage.py check
           python manage.py test
 
-  #  COVERAGE STAGE
   coverage:
     needs: test
     runs-on: ubuntu-latest
@@ -64,16 +63,13 @@ jobs:
           pip install pytest pytest-cov
       - name: Run coverage
         run: |
-          pytest --maxfail=1 --disable-warnings -q || true
+          pytest --cov=apps --cov=helping_hand_core --cov-report=html
           mkdir -p htmlcov
-          echo "<html><body><h2>No Django project yet - coverage skipped.</h2></body></html>" > htmlcov/index.html
-
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: htmlcov/
 
-  #  LINT STAGE
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -86,7 +82,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install pylint flake8
       - name: Lint code
-        run: flake8 apps/ helping_hand_core/ > flake8-report.txt || true
+        run: |
+          flake8 apps/ helping_hand_core/ > flake8-report.txt || true
           pylint apps helping_hand_core > pylint-report.txt || true
       - uses: actions/upload-artifact@v4
         with:
@@ -97,7 +94,6 @@ jobs:
           name: lint-report
           path: pylint-report.txt
 
-  #  SECURITY SCAN STAGE
   security:
     needs: lint
     runs-on: ubuntu-latest
@@ -105,13 +101,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run Bandit security scan
         run: |
-          bandit -r helping_hands -f json -o bandit-report.json || echo "{}" > bandit-report.json
+          bandit -r apps helping_hand_core -f json -o bandit-report.json || echo "{}" > bandit-report.json
       - uses: actions/upload-artifact@v4
         with:
           name: security-report
           path: bandit-report.json
 
-  #  DEPLOYMENT ARTIFACT STAGE
   deploy:
     needs: [coverage, lint, security]
     runs-on: ubuntu-latest
@@ -120,16 +115,20 @@ jobs:
       - name: Package deployment artifact
         run: |
           mkdir -p deployment
-          # Check if helping_hands folder exists before copying
+          # Copy only if folder exists
           if [ -d "helping_hand_core" ]; then
             echo " Found helping_hand_core folder, copying files..."
             cp -r helping_hand_core deployment/
           else
             echo " No Django project folder found, skipping copy."
             mkdir -p deployment/helping_hand_core
-            echo "# Placeholder for future Django project" > deployment/helping_hands_core/README.md
+            echo "# Placeholder for future Django project" > deployment/helping_hand_core/README.md
           fi
-          cp README.md requirements.txt deployment/ 2>/dev/null || true
+          if [ -d "apps" ]; then
+            cp -r apps deployment/
+          fi
+          cp README.md requirements.txt manage.py deployment/ 2>/dev/null || true
+          cp -r htmlcov deployment/ 2>/dev/null || true
           zip -r deployment-package-${{ github.run_number }}.zip deployment/
       - uses: actions/upload-artifact@v4
         with:
