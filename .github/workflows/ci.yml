@@ -60,12 +60,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-cov
-      - name: Run coverage
+          pip install pytest pytest-django pytest-cov coverage
+
+      - name: Run coverage tests
+        env:
+          DJANGO_SETTINGS_MODULE: helping_hand_core.settings
         run: |
-          pytest --cov=apps --cov=helping_hand_core --cov-report=html
-          mkdir -p htmlcov
-      - uses: actions/upload-artifact@v4
+          echo "🔍 Running Django tests with coverage..."
+          pytest --cov=apps --cov=helping_hand_core --cov-report=term-missing --cov-report=html --ds=helping_hand_core.settings
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: htmlcov/

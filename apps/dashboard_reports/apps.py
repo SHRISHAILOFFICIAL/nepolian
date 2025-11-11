@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 class DashboardReportsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'dashboard_reports'
+    name = 'apps.dashboard_reports'

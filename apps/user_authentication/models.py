@@ -7,6 +7,9 @@ class CustomUser(AbstractUser):
         ('shift_manager', 'Shift Manager'),
         ('staff', 'Staff'),
     ]
+    class Meta:
+        app_label = 'user_authentication'
+
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
     phone = models.CharField(max_length=15, blank=True, null=True)
