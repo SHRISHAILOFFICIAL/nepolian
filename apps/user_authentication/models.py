@@ -7,10 +7,7 @@ class CustomUser(AbstractUser):
         ('shift_manager', 'Shift Manager'),
         ('staff', 'Staff'),
     ]
-    class Meta:
-        app_label = 'user_authentication'
-
-
+    
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
     phone = models.CharField(max_length=15, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
@@ -19,8 +16,8 @@ class CustomUser(AbstractUser):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        app_label = 'user_authentication'
         ordering = ['-created_at']
 
     def __str__(self):
-        # Uses get_role_display for readable output (e.g., "Staff")
         return f"{self.username} ({self.get_role_display()})"
