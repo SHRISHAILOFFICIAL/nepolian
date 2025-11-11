@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'apps.dashboard_reports',
 ]
 
-AUTH_USER_MODEL = 'apps.user_authentication.CustomUser'
+AUTH_USER_MODEL = 'user_authentication.CustomUser'
 
 
 
