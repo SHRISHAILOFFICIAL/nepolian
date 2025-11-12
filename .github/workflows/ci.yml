@@ -67,7 +67,7 @@ jobs:
           DJANGO_SETTINGS_MODULE: helping_hand_core.settings
         run: |
           echo "🔍 Running Django tests with coverage..."
-          pytest --cov=apps --cov=helping_hand_core --cov-report=term-missing --cov-report=html --ds=helping_hand_core.settings
+          pytest --ds=helping_hand_core.settings --cov=apps --cov=helping_hand_core --cov-report=term-missing --cov-report=html --ds=helping_hand_core.settings
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
         with:
