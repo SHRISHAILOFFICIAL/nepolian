@@ -1,0 +1,107 @@
+{% extends 'base.html' %} {% block title %}Dashboard - Helping Hands
+{%endblock%} {% block content %}
+<h2>Welcome, {{ user.get_full_name|default:user.username }}!</h2>
+<p class="lead">
+  Role: <span class="badge bg-info">{{ user.get_role_display }}</span>
+</p>
+
+<div class="row mt-4">
+  {% if user.is_staff_member %}
+  <div class="col-md-4">
+    <div class="card text-white bg-success mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Available Shifts</h5>
+        <h2>{{ available_shifts }}</h2>
+        <a href="{% url 'shift_list' %}" class="btn btn-light">View Shifts</a>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-primary mb-3">
+      <div class="card-body">
+        <h5 class="card-title">My Applications</h5>
+        <h2>{{ my_applications }}</h2>
+        <a href="{% url 'my_shifts' %}" class="btn btn-light"
+          >View Applications</a
+        >
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-white bg-info mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Approved Shifts</h5>
+        <h2>{{ approved_shifts }}</h2>
+      </div>
+    </div>
+  </div>
+  {% elif user.is_manager or user.is_admin %}
+  <div class="col-md-3">
+    <div class="card text-white bg-primary mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Total Shifts</h5>
+        <h2>{{ total_shifts }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-success mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Open Shifts</h5>
+        <h2>{{ open_shifts }}</h2>
+        <a href="{% url 'manager_dashboard' %}" class="btn btn-light btn-sm"
+          >Manage</a
+        >
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-warning mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Pending Applications</h5>
+        <h2>{{ pending_applications }}</h2>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card text-white bg-info mb-3">
+      <div class="card-body">
+        <h5 class="card-title">Total Staff</h5>
+        <h2>{{ total_staff }}</h2>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{% if recent_shifts %}
+<div class="mt-4">
+  <h4>Recent Shifts</h4>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Store</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for shift in recent_shifts %}
+        <tr>
+          <td>{{ shift.title }}</td>
+          <td>{{ shift.store.name }}</td>
+          <td>{{ shift.shift_date }}</td>
+          <td>
+            <span class="badge bg-secondary"
+              >{{ shift.get_status_display }}</span
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %} {% endblock %}

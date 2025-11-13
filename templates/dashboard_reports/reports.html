@@ -1,0 +1,76 @@
+{% extends 'base.html' %} {% block title %}Reports - Helping Hands{% endblock %}
+{% block content %}
+<h2>Reports & Analytics</h2>
+
+<div class="card mt-4">
+  <div class="card-body">
+    <h5>Export Data</h5>
+    <a href="{% url 'export_shifts_csv' %}" class="btn btn-success"
+      >Export Shifts (CSV)</a
+    >
+    <a href="{% url 'export_volunteers_csv' %}" class="btn btn-success"
+      >Export Volunteers (CSV)</a
+    >
+  </div>
+</div>
+
+<div class="row mt-4">
+  <div class="col-md-3">
+    <div class="card bg-light">
+      <div class="card-body">
+        <h6>Total Shifts</h6>
+        <h3>{{ stats.total_shifts }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-light">
+      <div class="card-body">
+        <h6>Open Shifts</h6>
+        <h3>{{ stats.open_shifts }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-light">
+      <div class="card-body">
+        <h6>Total Applications</h6>
+        <h3>{{ stats.total_applications }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card bg-light">
+      <div class="card-body">
+        <h6>Approved</h6>
+        <h3>{{ stats.approved_applications }}</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if top_volunteers %}
+<div class="mt-4">
+  <h4>Top Volunteers</h4>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Volunteer</th>
+        <th>Email</th>
+        <th>Approved Shifts</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for volunteer in top_volunteers %}
+      <tr>
+        <td>{{ volunteer.get_full_name }}</td>
+        <td>{{ volunteer.email }}</td>
+        <td>
+          <span class="badge bg-success">{{ volunteer.approved_count }}</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %} {% endblock %}

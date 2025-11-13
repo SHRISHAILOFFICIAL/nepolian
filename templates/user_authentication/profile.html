@@ -1,0 +1,14 @@
+{% extends 'base.html' %} {% block title %}Profile - Helping Hands{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header bg-primary text-white"><h3>User Profile</h3></div>
+  <div class="card-body">
+    <p><strong>Username:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Name:</strong> {{ user.get_full_name }}</p>
+    <p><strong>Role:</strong> {{ user.get_role_display }}</p>
+    <p><strong>Phone:</strong> {{ user.phone|default:"Not provided" }}</p>
+    <p><strong>Member Since:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+  </div>
+</div>
+{% endblock %}

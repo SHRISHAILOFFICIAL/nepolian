@@ -1,0 +1,38 @@
+{% extends 'base.html' %} {% load static %} {%block title %}Shift Details
+{%endblock %} {% block content %}
+<div class="card">
+  <div class="card-header bg-primary text-white">
+    <h3>{{ shift.title }}</h3>
+  </div>
+  <div class="card-body">
+    <p><strong>Store:</strong> {{ shift.store.name }}</p>
+    <p><strong>Address:</strong> {{ shift.store.address }}</p>
+    <p><strong>Date:</strong> {{ shift.shift_date }}</p>
+    <p><strong>Time:</strong> {{ shift.start_time }} - {{ shift.end_time }}</p>
+    <p><strong>Role Required:</strong> {{ shift.get_role_required_display }}</p>
+    <p><strong>Slots Available:</strong> {{ shift.available_slots }}</p>
+
+    <p>
+      <strong>Status:</strong>
+      <span class="badge bg-info">{{ shift.get_status_display }}</span>
+    </p>
+
+    <p><strong>Description:</strong> {{ shift.description }}</p>
+
+    {% if user_application %}
+    <div class="alert alert-info">
+      Your application status:
+      <strong>{{ user_application.get_status_display }}</strong>
+    </div>
+    {% elif can_volunteer %}
+    <a href="{% url 'volunteer_for_shift' shift.id %}" class="btn btn-success">
+      Apply for this Shift
+    </a>
+    {% endif %}
+
+    <a href="{% url 'shift_list' %}" class="btn btn-secondary"
+      >Back to Shifts</a
+    >
+  </div>
+</div>
+{% endblock %}

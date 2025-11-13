@@ -1,0 +1,34 @@
+{% extends 'base.html' %}{% load static %} {% block title %}Review Application
+{%endblock %} {%block content %}
+<div class="card">
+  <div class="card-header bg-primary text-white">
+    <h3>Review Volunteer Application</h3>
+  </div>
+  <div class="card-body">
+    <h5>Shift Details</h5>
+    <p><strong>Shift:</strong> {{ application.shift.title }}</p>
+    <p><strong>Date:</strong> {{ application.shift.shift_date }}</p>
+    <p>
+      <strong>Time:</strong> {{ application.shift.start_time }} - {{
+      application.shift.end_time }}
+    </p>
+
+    <h5 class="mt-4">Volunteer Details</h5>
+    <p><strong>Name:</strong> {{ application.volunteer.get_full_name }}</p>
+    <p><strong>Email:</strong> {{ application.volunteer.email }}</p>
+    <p><strong>Phone:</strong> {{ application.volunteer.phone }}</p>
+    <p>
+      <strong>Applied:</strong> {{ application.applied_at|date:"F d, Y H:i" }}
+    </p>
+
+    <hr />
+    <form method="post">
+      {% csrf_token %} {{ form.as_p }}
+      <button type="submit" class="btn btn-primary">Submit Review</button>
+      <a href="{% url 'manager_dashboard' %}" class="btn btn-secondary"
+        >Cancel</a
+      >
+    </form>
+  </div>
+</div>
+{% endblock %}
