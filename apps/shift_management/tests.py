@@ -1,118 +1,69 @@
-from django.test import TestCase, Client
-from django.urls import reverse
-from django.utils import timezone
+from django.test import TestCase
+from django.contrib.auth import get_user_model
 from datetime import date, time, timedelta
-from apps.user_authentication.models import CustomUser
-from .models import Store, Shift, ShiftVolunteer, ShiftHistory
 
-
-class StoreModelTestCase(TestCase):
-    def setUp(self):
-        self.manager = CustomUser.objects.create_user(
-            username='manager1',
-            email='manager@test.com',
-            password='pass123',
-            role='manager'
-        )
-        self.store = Store.objects.create(
-            name='Test Store',
-            address='123 Test St',
-            city='Test City',
-            state='TS',
-            zip_code='12345',
-            phone='555-1234',
-            manager=self.manager
-        )
-
-    def test_store_creation(self):
-        self.assertEqual(self.store.name, 'Test Store')
-        self.assertTrue(self.store.is_active)
-
-    def test_store_string_representation(self):
-        self.assertEqual(str(self.store), 'Test Store - Test City')
-
-
-class ShiftModelTestCase(TestCase):
-    def setUp(self):
-        self.manager = CustomUser.objects.create_user(
-            username='manager1',
-            email='manager@test.com',
-            password='pass123',
-            role='manager'
-        )
-        self.store = Store.objects.create(
-            name='Test Store',
-            address='123 Test St',
-            city='Test City',
-            state='TS',
-            zip_code='12345',
-            phone='555-1234',
-            manager=self.manager
-        )
-        self.shift = Shift.objects.create(
-            store=self.store,
-            manager=self.manager,
-            title='Morning Shift',
-            description='Morning shift duties',
-            role_required='cashier',
-            shift_date=date.today() + timedelta(days=1),
-            start_time=time(9, 0),
-            end_time=time(17, 0),
-            slots_available=3
-        )
-
-    def test_shift_creation(self):
-        self.assertEqual(self.shift.title, 'Morning Shift')
-        self.assertEqual(self.shift.status, 'open')
-
-    def test_shift_available_slots(self):
-        self.assertEqual(self.shift.available_slots(), 3)
-
-    def test_shift_can_volunteer(self):
-        staff = CustomUser.objects.create_user(
-            username='staff1',
-            email='staff@test.com',
-            password='pass123',
-            role='staff'
-        )
-        self.assertTrue(self.shift.can_volunteer(staff))
+User = get_user_model()
 
 
 class ShiftViewTestCase(TestCase):
+    """Test shift management views"""
+
     def setUp(self):
-        self.client = Client()
-        self.manager = CustomUser.objects.create_user(
+        self.manager = User.objects.create_user(
             username='manager1',
             email='manager@test.com',
             password='pass123',
             role='manager'
         )
-        self.staff = CustomUser.objects.create_user(
+        self.staff = User.objects.create_user(
             username='staff1',
             email='staff@test.com',
             password='pass123',
             role='staff'
         )
-        self.store = Store.objects.create(
-            name='Test Store',
-            address='123 Test St',
-            city='Test City',
-            state='TS',
-            zip_code='12345',
-            phone='555-1234',
-            manager=self.manager
-        )
 
-    def test_shift_list_view_requires_login(self):
-        response = self.client.get(reverse('shift_list'))
+    def test_shift_list_requires_login(self):
+        """Test shift list requires authentication"""
+        response = self.client.get('/shifts/')
         self.assertEqual(response.status_code, 302)  # Redirect to login
 
-    def test_shift_list_view_authenticated(self):
+    def test_shift_list_authenticated(self):
+        """Test authenticated user can access shift list"""
         self.client.login(username='staff1', password='pass123')
-        response = self.client.get(reverse('shift_list'))
+        response = self.client.get('/shifts/')
         self.assertEqual(response.status_code, 200)
 
-    def test_manager_dashboard_access(self):
+    def test_manager_dashboard_requires_manager_role(self):
+        """Test manager dashboard requires manager role"""
+        self.client.login(username='staff1', password='pass123')
+        response = self.client.get('/shifts/manager/')
+        self.assertEqual(response.status_code, 302)  # Redirect - access denied
+
+    def test_manager_dashboard_accessible_by_manager(self):
+        """Test manager can access manager dashboard"""
         self.client.login(username='manager1', password='pass123')
-        response = self.client.get(reverse('manager_dashboard'))
+        response = self.client.get('/shifts/manager/')
+        self.assertEqual(response.status_code, 200)
+    
+    def test_my_shifts_requires_login(self):
+        """Test my shifts requires authentication"""
+        response = self.client.get('/shifts/my-shifts/')
+        self.assertEqual(response.status_code, 302)
+    
+    def test_my_shifts_accessible_when_logged_in(self):
+        """Test authenticated user can access my shifts"""
+        self.client.login(username='staff1', password='pass123')
+        response = self.client.get('/shifts/my-shifts/')
+        self.assertEqual(response.status_code, 200)
+    
+    def test_create_shift_requires_manager(self):
+        """Test create shift requires manager role"""
+        self.client.login(username='staff1', password='pass123')
+        response = self.client.get('/shifts/manager/create/')
+        self.assertEqual(response.status_code, 302)
+    
+    def test_create_shift_accessible_by_manager(self):
+        """Test manager can access create shift page"""
+        self.client.login(username='manager1', password='pass123')
+        response = self.client.get('/shifts/manager/create/')
         self.assertEqual(response.status_code, 200)

@@ -16,11 +16,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import redirect
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', lambda request: redirect('dashboard'), name='home'),
+    path('', views.index_view, name='home'),
     path('auth/', include('apps.user_authentication.urls')),
     path('dashboard/', include('apps.dashboard_reports.urls')),
     path('shifts/', include('apps.shift_management.urls')),
