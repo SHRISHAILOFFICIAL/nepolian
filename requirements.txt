@@ -1,16 +1,17 @@
 # --- Core Framework ---
 Django==4.2.7
-django-bootstrap5==23.3
 python-decouple==3.8
 
 # --- Testing & Coverage ---
 pytest==7.4.3
 pytest-django==4.7.0
 pytest-cov==4.1.0
+coverage==7.3.2
 
 # --- Linting & Code Quality ---
 flake8==6.1.0
 pylint==3.0.2
+pylint-django==2.5.5
 
 # --- Security Scanning ---
 bandit==1.7.5
