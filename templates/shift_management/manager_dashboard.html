@@ -1,0 +1,119 @@
+{% extends 'base.html' %} {% block title %}Manager Dashboard{% endblock %}
+{%block content %}
+
+<h2>Shift Management</h2>
+<a href="{% url 'create_shift' %}" class="btn btn-primary mb-3"
+  >Create New Shift</a
+>
+
+<h4 class="mt-4">Pending Applications ({{ pending_applications.count }})</h4>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Volunteer</th>
+      <th>Shift</th>
+      <th>Date</th>
+      <th>Applied</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for app in pending_applications %}
+    <tr>
+      <td>{{ app.volunteer.get_full_name }}</td>
+      <td>{{ app.shift.title }}</td>
+      <td>{{ app.shift.shift_date }}</td>
+      <td>{{ app.applied_at|date:"M d, Y" }}</td>
+      <td>
+        <a
+          href="{% url 'approve_volunteer' app.id %}"
+          class="btn btn-sm btn-success"
+          onclick="return confirm('Approve this volunteer?')"
+          >Approve</a
+        >
+        <a
+          href="{% url 'reject_volunteer' app.id %}"
+          class="btn btn-sm btn-danger"
+          onclick="return confirm('Reject this application?')"
+          >Reject</a
+        >
+        <a
+          href="{% url 'review_volunteer' app.id %}"
+          class="btn btn-sm btn-warning"
+          >Review</a
+        >
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5">No pending applications.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h4 class="mt-4">My Shifts</h4>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Store</th>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Volunteers</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for shift in shifts %}
+    <tr>
+      <td>{{ shift.title }}</td>
+      <td>{{ shift.store.name }}</td>
+      <td>{{ shift.shift_date }}</td>
+      <td>{{ shift.start_time }} - {{ shift.end_time }}</td>
+      <td>
+        <span class="badge bg-success"
+          >{{ shift.approved_count }} Approved</span
+        >
+        <span class="badge bg-secondary"
+          >{{ shift.available_slots }} Available</span
+        >
+      </td>
+      <td><span class="badge bg-info">{{ shift.get_status_display }}</span></td>
+      <td>
+        <a href="{% url 'shift_detail' shift.id %}" class="btn btn-sm btn-info"
+          >View</a
+        >
+        {% if shift.approved_count == 0 %}
+        <a
+          href="{% url 'update_shift' shift.id %}"
+          class="btn btn-sm btn-warning"
+          >Edit</a
+        >
+        {% else %}
+        <button
+          class="btn btn-sm btn-secondary"
+          disabled
+          title="Cannot edit shift with approved volunteers"
+        >
+          Edit
+        </button>
+        {% endif %} {% if shift.status == 'open' %}
+        <a
+          href="{% url 'cancel_shift' shift.id %}"
+          class="btn btn-sm btn-danger"
+          onclick="return confirm('Cancel this shift and notify all volunteers?')"
+          >Cancel</a
+        >
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="7">No shifts created yet.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

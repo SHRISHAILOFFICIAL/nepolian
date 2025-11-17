@@ -1,0 +1,59 @@
+{% extends 'base.html' %}{% load static %} {% block title %}My Applications
+{%endblock %} {%block content %}
+
+<h2>My Shift Applications</h2>
+<table class="table table-striped mt-4">
+  <thead>
+    <tr>
+      <th>Shift</th>
+      <th>Store</th>
+      <th>Date</th>
+      <th>Status</th>
+      <th>Applied</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for application in applications %}
+    <tr>
+      <td>{{ application.shift.title }}</td>
+      <td>{{ application.shift.store.name }}</td>
+      <td>{{ application.shift.shift_date }}</td>
+      <td>
+        {%comment%}
+        <span
+          class="badge bg-{{ application.status == 'approved' }}success{% if application.status == 'pending' %}warning{% elif application.status == 'rejected' %}danger{% endif %}"
+          >{{ application.get_status_display }}</span
+        >
+        {% endcomment %}
+        <span
+          class="badge {% if application.status == 'approved' %} bg-success {% elif application.status == 'pending' %} bg-warning {% elif application.status == 'rejected' %} bg-danger {% else %} bg-secondary {% endif %}"
+        >
+          {{ application.get_status_display }}
+        </span>
+      </td>
+      <td>{{ application.applied_at|date:"M d, Y" }}</td>
+      <td>
+        <a
+          href="{% url 'shift_detail' application.shift.id %}"
+          class="btn btn-sm btn-info"
+          >View</a
+        >
+        {% if application.status == 'pending' %}
+        <a
+          href="{% url 'withdraw_volunteer' application.id %}"
+          class="btn btn-sm btn-danger"
+          onclick="return confirm('Withdraw application?')"
+          >Withdraw</a
+        >
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6">You haven't applied for any shifts yet.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
