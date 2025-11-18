@@ -59,7 +59,7 @@ jobs:
           DJANGO_SETTINGS_MODULE: helping_hand_core.settings
         run: |
           python manage.py check
-          python manage.py test apps.user_authentication apps.shift_management apps.notifications apps.dashboard_reports --verbosity=2 || echo "Tests completed"
+          pytest -v || echo "Tests completed"
 
   coverage:
     needs: test
@@ -85,13 +85,12 @@ jobs:
         env:
           DJANGO_SETTINGS_MODULE: helping_hand_core.settings
         run: |
-          echo "🔍 Running Django tests with coverage..."
-          coverage run --source='apps' manage.py test apps.user_authentication apps.shift_management apps.notifications apps.dashboard_reports --verbosity=2 || true
-          coverage report || echo "Coverage: Tests implemented"
+          echo "🔍 Running tests with coverage using pytest..."
+          pytest --cov=apps --cov-report=term --cov-report=html --cov-config=.coveragerc -v || true
 
       - name: Generate coverage report
         run: |
-          coverage report
+          coverage report --precision=2
 
       - name: Upload HTML coverage report
         uses: actions/upload-artifact@v4
