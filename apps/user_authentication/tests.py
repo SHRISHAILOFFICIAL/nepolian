@@ -64,12 +64,26 @@ class AuthViewTestCase(TestCase):
     
     def test_successful_login(self):
         """Test user can log in"""
-        user = User.objects.create_user(username='testuser', password='testpass123', role='staff')
+        user = User.objects.create_user(
+            username='testuser', 
+            password='testpass123', 
+            role='staff',
+            first_name='Test'
+        )
         response = self.client.post('/auth/login/', {
             'username': 'testuser',
             'password': 'testpass123'
         })
         self.assertEqual(response.status_code, 302)  # Redirect after login
+    
+    def test_failed_login(self):
+        """Test failed login with wrong password"""
+        user = User.objects.create_user(username='testuser', password='testpass123', role='staff')
+        response = self.client.post('/auth/login/', {
+            'username': 'testuser',
+            'password': 'wrongpass'
+        })
+        self.assertEqual(response.status_code, 200)  # Stay on login page
     
     def test_logout(self):
         """Test user can log out"""
@@ -89,6 +103,22 @@ class AuthViewTestCase(TestCase):
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get('/auth/profile/')
         self.assertEqual(response.status_code, 200)
+    
+    def test_profile_update(self):
+        """Test user can update profile"""
+        user = User.objects.create_user(
+            username='testuser', 
+            password='testpass123', 
+            role='staff',
+            email='old@test.com'
+        )
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.post('/auth/profile/', {
+            'first_name': 'Updated',
+            'last_name': 'Name',
+            'email': 'new@test.com'
+        })
+        self.assertIn(response.status_code, [200, 302])
     
     def test_password_reset_request_accessible(self):
         """Test password reset request page is accessible"""
@@ -137,3 +167,56 @@ class AuthViewTestCase(TestCase):
         })
         # Should redirect after successful signup
         self.assertIn(response.status_code, [200, 302])
+        
+    def test_signup_redirects_if_authenticated(self):
+        """Test signup redirects if user already logged in"""
+        user = User.objects.create_user(username='testuser', password='testpass123', role='staff')
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get('/auth/signup/')
+        self.assertEqual(response.status_code, 302)
+        
+    def test_login_redirects_if_authenticated(self):
+        """Test login redirects if user already logged in"""
+        user = User.objects.create_user(username='testuser', password='testpass123', role='staff')
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get('/auth/login/')
+        self.assertEqual(response.status_code, 302)
+        
+    def test_user_management_requires_admin(self):
+        """Test user management requires admin role"""
+        user = User.objects.create_user(username='staff', password='pass123', role='staff')
+        self.client.login(username='staff', password='pass123')
+        response = self.client.get('/auth/users/')
+        self.assertEqual(response.status_code, 302)
+        
+    def test_user_management_accessible_by_admin(self):
+        """Test admin can access user management"""
+        admin = User.objects.create_user(username='admin', password='pass123', role='admin')
+        self.client.login(username='admin', password='pass123')
+        response = self.client.get('/auth/users/')
+        self.assertEqual(response.status_code, 200)
+        
+    def test_password_reset_with_valid_username(self):
+        """Test password reset request with valid username"""
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            role='staff',
+            security_question='What is your favorite color?',
+            security_answer='Blue'
+        )
+        response = self.client.post('/auth/password-reset/', {
+            'username': 'testuser'
+        })
+        self.assertIn(response.status_code, [200, 302])
+        
+    def test_get_full_name_method(self):
+        """Test get_full_name method on user model"""
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            role='staff',
+            first_name='Test',
+            last_name='User'
+        )
+        self.assertEqual(user.get_full_name(), 'Test User')
