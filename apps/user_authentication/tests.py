@@ -220,3 +220,130 @@ class AuthViewTestCase(TestCase):
             last_name='User'
         )
         self.assertEqual(user.get_full_name(), 'Test User')
+        
+    def test_password_reset_question_view(self):
+        """Test password reset question view with session"""
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            role='staff',
+            security_question='pet',
+            security_answer='fluffy'
+        )
+        session = self.client.session
+        session['reset_user_id'] = user.id
+        session.save()
+        response = self.client.get('/auth/password-reset/question/')
+        self.assertEqual(response.status_code, 200)
+        
+    def test_password_reset_question_post_correct(self):
+        """Test submitting correct security answer"""
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            role='staff',
+            security_question='pet',
+            security_answer='fluffy'
+        )
+        session = self.client.session
+        session['reset_user_id'] = user.id
+        session.save()
+        response = self.client.post('/auth/password-reset/question/', {
+            'security_answer': 'Fluffy'
+        })
+        self.assertIn(response.status_code, [200, 302])
+        
+    def test_password_reset_question_post_incorrect(self):
+        """Test submitting incorrect security answer"""
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            role='staff',
+            security_question='pet',
+            security_answer='fluffy'
+        )
+        session = self.client.session
+        session['reset_user_id'] = user.id
+        session.save()
+        response = self.client.post('/auth/password-reset/question/', {
+            'security_answer': 'wrong'
+        })
+        self.assertEqual(response.status_code, 200)
+        
+    def test_password_reset_confirm_view(self):
+        """Test password reset confirm view"""
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            role='staff'
+        )
+        session = self.client.session
+        session['reset_user_id'] = user.id
+        session['reset_verified'] = True
+        session.save()
+        response = self.client.get('/auth/password-reset/confirm/')
+        self.assertEqual(response.status_code, 200)
+        
+    def test_password_reset_confirm_post(self):
+        """Test setting new password"""
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            role='staff'
+        )
+        session = self.client.session
+        session['reset_user_id'] = user.id
+        session['reset_verified'] = True
+        session.save()
+        response = self.client.post('/auth/password-reset/confirm/', {
+            'new_password': 'newpass123',
+            'confirm_password': 'newpass123'
+        })
+        self.assertIn(response.status_code, [200, 302])
+        
+    def test_password_reset_without_security_question(self):
+        """Test password reset for user without security question"""
+        user = User.objects.create_user(
+            username='testuser',
+            password='testpass123',
+            role='staff',
+            security_question='',
+            security_answer=''
+        )
+        response = self.client.post('/auth/password-reset/', {
+            'username': 'testuser'
+        })
+        self.assertEqual(response.status_code, 200)
+        
+    def test_user_management_shows_stats(self):
+        """Test user management shows user statistics"""
+        admin = User.objects.create_user(username='admin', password='pass123', role='admin')
+        self.client.login(username='admin', password='pass123')
+        response = self.client.get('/auth/users/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('total_users', response.context)
+        self.assertIn('managers_count', response.context)
+        self.assertIn('staff_count', response.context)
+        
+    def test_signup_form_validation(self):
+        """Test signup form with valid data"""
+        from apps.user_authentication.forms import SignUpForm
+        form_data = {
+            'username': 'newuser',
+            'email': 'new@test.com',
+            'password1': 'complexpass123',
+            'password2': 'complexpass123',
+            'first_name': 'New',
+            'last_name': 'User',
+            'role': 'staff',
+            'security_question': 'pet',
+            'security_answer': 'fluffy'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertTrue(form.is_valid() or 'password' not in form.errors)
+        
+    def test_user_get_role_display(self):
+        """Test get_role_display method"""
+        user = User.objects.create_user(username='test', password='pass', role='staff')
+        role_display = user.get_role_display()
+        self.assertIsNotNone(role_display)

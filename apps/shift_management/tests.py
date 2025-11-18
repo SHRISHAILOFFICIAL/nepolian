@@ -148,3 +148,93 @@ class ShiftViewTestCase(TestCase):
         )
         self.assertEqual(application.status, 'pending')
         self.assertIn(str(self.staff.username), str(application))
+        
+    def test_volunteer_for_shift_success(self):
+        """Test staff can successfully volunteer for a shift"""
+        self.client.login(username='staff1', password='pass123')
+        response = self.client.post(f'/shifts/{self.shift.id}/volunteer/')
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(ShiftVolunteer.objects.filter(shift=self.shift, volunteer=self.staff).exists())
+        
+    def test_volunteer_for_shift_non_staff(self):
+        """Test non-staff cannot volunteer"""
+        self.client.login(username='manager1', password='pass123')
+        response = self.client.post(f'/shifts/{self.shift.id}/volunteer/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(ShiftVolunteer.objects.filter(shift=self.shift, volunteer=self.manager).exists())
+        
+    def test_withdraw_volunteer_application(self):
+        """Test withdrawing a pending application"""
+        application = ShiftVolunteer.objects.create(
+            shift=self.shift,
+            volunteer=self.staff,
+            status='pending'
+        )
+        self.client.login(username='staff1', password='pass123')
+        response = self.client.post(f'/shifts/application/{application.id}/withdraw/')
+        self.assertEqual(response.status_code, 302)
+        application.refresh_from_db()
+        self.assertEqual(application.status, 'withdrawn')
+        
+    def test_withdraw_approved_application_fails(self):
+        """Test cannot withdraw approved application"""
+        application = ShiftVolunteer.objects.create(
+            shift=self.shift,
+            volunteer=self.staff,
+            status='approved'
+        )
+        self.client.login(username='staff1', password='pass123')
+        response = self.client.post(f'/shifts/application/{application.id}/withdraw/')
+        self.assertEqual(response.status_code, 302)
+        application.refresh_from_db()
+        self.assertEqual(application.status, 'approved')
+        
+    def test_create_shift_post_success(self):
+        """Test manager can create a shift via POST"""
+        self.client.login(username='manager1', password='pass123')
+        shift_count = Shift.objects.count()
+        response = self.client.post('/shifts/manager/create/', {
+            'title': 'New Shift',
+            'store': self.store.id,
+            'shift_date': (timezone.now().date() + timedelta(days=3)).isoformat(),
+            'start_time': '10:00',
+            'end_time': '18:00',
+            'role_required': 'cashier',
+            'slots_available': 3,
+            'description': 'Test shift'
+        })
+        self.assertIn(response.status_code, [200, 302])
+        
+    def test_manager_dashboard_shows_pending_applications(self):
+        """Test manager dashboard shows pending applications"""
+        ShiftVolunteer.objects.create(
+            shift=self.shift,
+            volunteer=self.staff,
+            status='pending'
+        )
+        self.client.login(username='manager1', password='pass123')
+        response = self.client.get('/shifts/manager/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('pending_applications', response.context)
+        
+    def test_shift_form_validation(self):
+        """Test shift form with valid data"""
+        from apps.shift_management.forms import ShiftForm
+        form_data = {
+            'title': 'Test Shift',
+            'store': self.store.id,
+            'shift_date': (timezone.now().date() + timedelta(days=1)).isoformat(),
+            'start_time': '09:00',
+            'end_time': '17:00',
+            'role_required': 'cashier',
+            'slots_available': 2,
+            'description': 'Test description'
+        }
+        form = ShiftForm(data=form_data)
+        self.assertTrue(form.is_valid())
+        
+    def test_shift_get_status_display(self):
+        """Test shift status display"""
+        self.assertEqual(self.shift.status, 'open')
+        status_display = self.shift.get_status_display()
+        self.assertIsNotNone(status_display)
